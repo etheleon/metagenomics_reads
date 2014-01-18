@@ -1,0 +1,6 @@
+load keggGIFile='/export2/home/uesu/downloads/gi2kegg.map';
+load taxGIFile='/export2/home/uesu/downloads/gi_taxid_prot.bin';
+
+import blastFile='/export2/home/uesu/sequencing.output/binary/medmed/K02027.trimmed.m8' meganFile='/export2/home/uesu/sequencing.output/binary/medmed/K02027.rma' maxMatches=100 minScore=50.0 maxExpected=1.0 topPercent=10 minSupport=5 minComplexity=0.44 useMinimalCoverageHeuristic=false useSeed=false useCOG=false useKegg=true paired=false useIdentityFilter=false textStoragePolicy=0 blastFormat=BlastTAB mapping='Taxonomy:GI_MAP=true,KEGG:GI_MAP=true';
+export what=matchPatterns taxon=2 rank=Genus file='/export2/home/uesu/sequencing.output/K02027-ex.txt';
+quit;
