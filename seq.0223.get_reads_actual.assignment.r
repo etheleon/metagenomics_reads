@@ -3,13 +3,14 @@ library(RJSONIO)
 library(RCurl)
 args=commandArgs(T)
 
-#--Database
-#library(sqldf)
-#climb<-function(x) { 
-#sqlcommand=paste("select * from tax2rank where taxid=",x)
-#dbGetQuery(dbcoAn, sqlcommand)}
-#databasefile="/export2/home/uesu/sequencing.output/data/gi_taxid_prot.db"
-#dbcon=dbConnect(dbDriver("SQLite"), dbname=databasefile)
+
+--Database
+library(sqldf)
+climb<-function(x) { 
+sqlcommand=paste("select * from tax2rank where taxid=",x)
+dbGetQuery(dbcoAn, sqlcommand)}
+databasefile="/export2/home/uesu/sequencing.output/data/gi_taxid_prot.db"
+dbcon=dbConnect(dbDriver("SQLite"), dbname=databasefile)
 
 #--Params
 KO=args[1]
@@ -26,11 +27,14 @@ familytaxids=system(paste("ls out/seq.0222/",KO,"-",rank,"-* | perl -ne '/\\-(\\
 #query<-"start pathway=node:pathwayid(pathway={pathway}) match pathway--(ko:`ko`)<-[r]-(cpd:`cpd`) return ko.ko,cpd.cpd;"
 #query<-"start pathway=node:pathwayid(pathway={pathway}) match pathway--(ko:`ko`)<-[r]-(cpd:`cpd`) return ko.ko AS node"
 #query<-"start pathway=node:pathwayid(pathway={pathway}) match pathway--(ko:`ko`)<-[r]-(cpd:`cpd`) return cpd.cpd AS node"
-params="path:ko00010"
+#params="path:ko00010"
+
+
     post=toJSON(
 	    list(
 		query=query,
-		params=list(pathway=params)
+#		params=list(taxids=taxids)
+		params=list(taxids=as.character(taxids))
 		)
 	    )
 
@@ -62,8 +66,9 @@ result[[2]]
 
 lapply(familytaxids, function(xx){ 	#for each family
 	node=xx
-	filetoprocess=sprintf("out/seq.0222/%s-%s-%s-ex2.txt",KO,rank,node)	
+	filetoprocess=sprintf("out/seq.0222/%s-%s-%s-ex2.txt",KO,rank,node)	#? hmm what is this
 	filetoopen=sprintf("out/seq.0222/%s-%s-%s-ex2.txt",KO,rank,node)	
+	
 	if(file.info(filetoopen)$size != 0) { 
 	
 	#----Start processing the file----#
@@ -74,7 +79,9 @@ lapply(familytaxids, function(xx){ 	#for each family
 		    assigned.taxa=subset(per.read, score >= 0.9*max(per.read$score) & score > 35)
 	}))
 
-
+#query="start base=node:ncbitaxid(taxid={taxids}) match base-[:childof*]->(genus:`genus`) return genus.taxid"
+#taxids=allMatches$taxid
+#taxids=list(allMatches$taxid)
 #Find GLOs
 glo=ddply(na.omit(setNames(do.call(rbind,apply(allMatches,1 , function(x) { 
 		    q<-sprintf("start base=node:ncbitaxid(\'taxid:%s\') match base-[:childof*]->(genus:`genus`) return genus.taxid;",x[[2]])
