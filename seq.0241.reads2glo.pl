@@ -1,5 +1,4 @@
 #!/usr/bin/env perl
-
 die "usage: seq.0223.get_reads_actual.assignment.pl KXXXXX " unless $#ARGV +1 == 1;
 
 use strict;
@@ -8,17 +7,14 @@ use REST::Neo4p::Query;
 
 sub uniq {return keys %{{ map { $_ => 1 } @_ }};} #sorts keys 
 
-#Inputs
 my $KO=$ARGV[0];
 my $inputfile='out/seq.0231/'.$KO.'-full.list.txt';
 my $outputfile='out/seq.0241/'.$KO.'-family-GLOS';
 
-#NEO4j SERVER
 my $server = 'http://192.168.100.1:7474'; REST::Neo4p->connect($server);
 my $stmt='start basetaxa=node:ncbitaxid(taxid={taxids}) match basetaxa-[:childof*]->(genus:`genus`) return genus.taxid';
 
-#Starts reading file 
-#1st pass get the basetaxa
+#1st pass::hash creation
 my %basetaxahash=();
 open(INPUT, $inputfile) || die $!;
 while(<INPUT>){
@@ -43,10 +39,9 @@ foreach my $basetaxa (keys %basetaxahash) {
 	my $query = REST::Neo4p::Query->new($stmt,{ taxids => $basetaxa });
 	$query->execute;
 	while (my $result = $query->fetch) {
-		$basetaxahash{$basetaxa} = $result->[0];
+		$basetaxahash{$basetaxa} = $result->[0]; #i need to not push empty returns
 	}
     }
-
 ####################################################################################################
 #Example line		
 #HWI-ST884:57:1:1101:13687:2939#0/1      357808  63.54   383372  63.54   316274  58.54 
@@ -66,7 +61,6 @@ while(<INPUT>){
     my @genustaxa=();
 
     while(scalar @FF > 0) { #Loops through the assignments
-	
 	if($FF[0] == 0){	#skip if assigned to unknown ie. $FF[0] = 0 
 	    shift @FF; shift @FF; 
 	}else{
@@ -87,6 +81,7 @@ foreach my $taxa (@basetaxa) {
 push @genustaxa, $basetaxahash{$taxa};
 }
 @genustaxa = uniq(@genustaxa);
+@genustaxa = grep {$_} @genustaxa;
 @genustaxa = sort {$a <=> $b} @genustaxa;
 	print OUTPUT $#genustaxa+1,"\t";
 	print OUTPUT join("_", @genustaxa),"\n";
